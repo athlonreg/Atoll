@@ -1294,7 +1294,8 @@ extension Defaults.Keys {
     static let showMemoryGraph = Key<Bool>("showMemoryGraph", default: true)
     static let showGpuGraph = Key<Bool>("showGpuGraph", default: true)
     static let showNetworkGraph = Key<Bool>("showNetworkGraph", default: false)
-    static let showDiskGraph = Key<Bool>("showDiskGraph", default: false)
+    static let showDiskGraph = Key<Bool>("showDiskGraph", default: true)
+    static let showTemperatureOnStatsCards = Key<Bool>("showTemperatureOnStatsCards", default: true)
     static let cpuTemperatureUnit = Key<LockScreenWeatherTemperatureUnit>("cpuTemperatureUnit", default: .matchingSystemPreference)
     
     // MARK: Terminal Feature
@@ -1314,6 +1315,33 @@ extension Defaults.Keys {
     static let terminalCursorColor = Key<Color>("terminalCursorColor", default: Color(.selectedControlColor))
     static let terminalStickyMode = Key<Bool>("terminalStickyMode", default: false)
     
+    // MARK: Code Formatter Feature
+    static let enableCodeFormatter = Key<Bool>("enableCodeFormatter", default: false)
+    static let codeFormatterLanguage = Key<CodeFormatterLanguage>("codeFormatterLanguage", default: .json)
+    static let codeFormatterIndentWidth = Key<Int>("codeFormatterIndentWidth", default: 2)
+    static let codeFormatterLiveFormat = Key<Bool>("codeFormatterLiveFormat", default: true)
+    static let codeFormatterUppercaseSQLKeywords = Key<Bool>("codeFormatterUppercaseSQLKeywords", default: true)
+    static let codeFormatterInputText = Key<String>("codeFormatterInputText", default: "")
+    static let codeFormatterPanelSizeWidth = Key<Double>("codeFormatterPanelSizeWidth", default: 900.0)
+    static let codeFormatterPanelSizeHeight = Key<Double>("codeFormatterPanelSizeHeight", default: 560.0)
+
+    // MARK: Password Generator Feature
+    static let enablePasswordGenerator = Key<Bool>("enablePasswordGenerator", default: false)
+    static let passwordLength = Key<Double>("passwordLength", default: 16.0)
+    static let passwordIncludeLowercase = Key<Bool>("passwordIncludeLowercase", default: true)
+    static let passwordIncludeUppercase = Key<Bool>("passwordIncludeUppercase", default: true)
+    static let passwordIncludeDigits = Key<Bool>("passwordIncludeDigits", default: true)
+    static let passwordIncludeSymbols = Key<Bool>("passwordIncludeSymbols", default: true)
+    static let passwordCustomSymbols = Key<String>("passwordCustomSymbols", default: "!@#$%^&*()-_=+[]{};:,.?/")
+    static let passwordExcludeAmbiguous = Key<Bool>("passwordExcludeAmbiguous", default: false)
+    static let passwordRequireEverySet = Key<Bool>("passwordRequireEverySet", default: true)
+    static let passwordAvoidRepeats = Key<Bool>("passwordAvoidRepeats", default: false)
+    static let passwordAutoCopyOnGenerate = Key<Bool>("passwordAutoCopyOnGenerate", default: true)
+
+    // MARK: Notch Entry Visibility
+    /// `[NotchEntry.rawValue: isHidden]`. A missing key means visible.
+    static let notchEntryVisibility = Key<[String: Bool]>("notchEntryVisibility", default: [:])
+
     // MARK: Timer Feature
     static let enableTimerFeature = Key<Bool>("enableTimerFeature", default: true)
     static let timerDisplayMode = Key<TimerDisplayMode>("timerDisplayMode", default: .tab)

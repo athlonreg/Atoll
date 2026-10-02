@@ -102,32 +102,48 @@ func enabledStandardTabCount() -> Int {
     var count = 0
 
     // Home tab
-    if Defaults[.showStandardMediaControls] || Defaults[.showCalendar] || Defaults[.showMirror] {
+    if (Defaults[.showStandardMediaControls] || Defaults[.showCalendar] || Defaults[.showMirror])
+        && !NotchEntry.home.isHidden {
         count += 1
     }
 
     // Shelf tab
-    if Defaults[.dynamicShelf] {
+    if Defaults[.dynamicShelf] && !NotchEntry.shelf.isHidden {
         count += 1
     }
 
     // Timer tab (only in .tab display mode)
-    if Defaults[.enableTimerFeature] && Defaults[.timerDisplayMode] == .tab {
+    if Defaults[.enableTimerFeature] && Defaults[.timerDisplayMode] == .tab
+        && !NotchEntry.timer.isHidden {
         count += 1
     }
 
     // Stats tab
-    if Defaults[.enableStatsFeature] {
+    if Defaults[.enableStatsFeature] && !NotchEntry.stats.isHidden {
+        count += 1
+    }
+
+    // LLM usage tab
+    if Defaults[.enableLLMUsageFeature] && !NotchEntry.llmUsage.isHidden {
         count += 1
     }
 
     // Notes / Clipboard tab
-    if Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab) {
+    if (Defaults[.enableNotes] || (Defaults[.enableClipboardManager] && Defaults[.clipboardDisplayMode] == .separateTab))
+        && !NotchEntry.notes.isHidden {
         count += 1
     }
 
     // Terminal tab
-    if Defaults[.enableTerminalFeature] {
+    if Defaults[.enableTerminalFeature] && !NotchEntry.terminal.isHidden {
+        count += 1
+    }
+
+    // Utility entries that open a window instead of swapping notch contents.
+    if NotchEntry.codeFormatter.isVisibleInTabBar {
+        count += 1
+    }
+    if NotchEntry.passwordGenerator.isVisibleInTabBar {
         count += 1
     }
 

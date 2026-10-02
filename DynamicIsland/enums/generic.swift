@@ -23,6 +23,7 @@
 import Foundation
 import Defaults
 import CoreGraphics
+import SwiftUI
 
 public enum Style {
     case notch
@@ -81,6 +82,196 @@ public enum NotchViews {
     case clipboard
     case terminal
     case extensionExperience
+}
+
+/// Every entry point that can appear in the expanded notch tab bar.
+///
+/// Visibility is stored as a `[String: Bool]` map so new entries do not need a
+/// dedicated `Defaults` key each. A missing key means "use the default", which is
+/// visible — entries only ever disappear when the user explicitly hides them.
+enum NotchEntry: String, CaseIterable, Identifiable {
+    case home
+    case shelf
+    case timer
+    case stats
+    case llmUsage
+    case notes
+    case clipboard
+    case terminal
+    case codeFormatter
+    case passwordGenerator
+
+    var id: String { rawValue }
+
+    /// Display order in Settings. Mirrors the tab bar so both read the same way.
+    static let displayOrder: [NotchEntry] = [
+        .home, .shelf, .timer, .stats, .llmUsage, .notes,
+        .clipboard, .terminal, .codeFormatter, .passwordGenerator
+    ]
+
+    var localizedName: String {
+        switch self {
+        case .home: return String(localized: "Home")
+        case .shelf: return String(localized: "Shelf")
+        case .timer: return String(localized: "Timer")
+        case .stats: return String(localized: "Stats")
+        case .llmUsage: return String(localized: "Usage")
+        case .notes: return String(localized: "Notes")
+        case .clipboard: return String(localized: "Clipboard")
+        case .terminal: return String(localized: "Terminal")
+        case .codeFormatter: return String(localized: "Code Formatter")
+        case .passwordGenerator: return String(localized: "Password Generator")
+        }
+    }
+
+    /// Symbol used in Settings so the toggle row matches what sits in the tab bar.
+    var systemImage: String {
+        switch self {
+        case .home: return "house.fill"
+        case .shelf: return "tray.fill"
+        case .timer: return "timer"
+        case .stats: return "chart.xyaxis.line"
+        case .llmUsage: return "chart.bar.doc.horizontal"
+        case .notes: return "note.text"
+        case .clipboard: return "doc.on.clipboard"
+        case .terminal: return "apple.terminal"
+        case .codeFormatter: return "curlybraces"
+        case .passwordGenerator: return "key.fill"
+        }
+    }
+
+    /// One-line hint shown under each row in Settings.
+    var localizedDescription: String {
+        switch self {
+        case .home: return String(localized: "Media controls, calendar and mirror widgets")
+        case .shelf: return String(localized: "Dropped files held beside the notch")
+        case .timer: return String(localized: "Countdown timers and presets")
+        case .stats: return String(localized: "CPU, GPU, memory, network and disk insight")
+        case .llmUsage: return String(localized: "LLM usage tracking")
+        case .notes: return String(localized: "Quick notes captured from the notch")
+        case .clipboard: return String(localized: "Clipboard history")
+        case .terminal: return String(localized: "Drop-down terminal tab")
+        case .codeFormatter: return String(localized: "Format JSON, YAML, SQL, HTML, CSS and JavaScript")
+        case .passwordGenerator: return String(localized: "Generate a password matching your rules")
+        }
+    }
+
+    /// The feature switch that must also be on for the entry to appear.
+    /// `nil` means the entry has no separate feature gate.
+    var requiresFeatureEnabled: Bool {
+        switch self {
+        case .codeFormatter: return Defaults[.enableCodeFormatter]
+        case .passwordGenerator: return Defaults[.enablePasswordGenerator]
+        default: return true
+        }
+    }
+
+    var isHidden: Bool {
+        NotchEntry.isHidden(self)
+    }
+
+    static func isHidden(_ entry: NotchEntry) -> Bool {
+        Defaults[.notchEntryVisibility][entry.rawValue] ?? false
+    }
+
+    /// Whether the entry currently reaches the tab bar: the user has not hidden it
+    /// and its backing feature (if any) is enabled.
+    var isVisibleInTabBar: Bool {
+        !isHidden && requiresFeatureEnabled
+    }
+
+    static func setHidden(_ hidden: Bool, for entry: NotchEntry) {
+        var visibility = Defaults[.notchEntryVisibility]
+        visibility[entry.rawValue] = hidden
+        Defaults[.notchEntryVisibility] = visibility
+    }
+
+    /// Binding helper for SwiftUI toggles.
+    static func hiddenBinding(for entry: NotchEntry) -> Binding<Bool> {
+        Binding(
+            get: { NotchEntry.isHidden(entry) },
+            set: { NotchEntry.setHidden($0, for: entry) }
+        )
+    }
+
+    /// Clears every stored override, restoring the default "show everything" state.
+    static func resetAllVisibility() {
+        Defaults[.notchEntryVisibility] = [:]
+    }
+
+    /// True when at least one entry has been explicitly hidden.
+    static var hasCustomizations: Bool {
+        Defaults[.notchEntryVisibility].contains { $0.value }
+    }
+}
+
+/// Languages offered by the code formatter tool.
+enum CodeFormatterLanguage: String, CaseIterable, Codable, Defaults.Serializable, Identifiable {
+    case json
+    case yaml
+    case sql
+    case html
+    case css
+    case javascript
+    case xml
+
+    var id: String { rawValue }
+
+    var localizedName: String {
+        switch self {
+        case .json: return String(localized: "JSON")
+        case .yaml: return String(localized: "YAML")
+        case .sql: return String(localized: "SQL")
+        case .html: return String(localized: "HTML")
+        case .css: return String(localized: "CSS")
+        case .javascript: return String(localized: "JavaScript")
+        case .xml: return String(localized: "XML")
+        }
+    }
+
+    /// Lowercase file extensions that should map back onto this language.
+    var aliases: [String] {
+        switch self {
+        case .json: return ["json", "jsonc"]
+        case .yaml: return ["yaml", "yml"]
+        case .sql: return ["sql"]
+        case .html: return ["html", "htm", "vue", "svelte"]
+        case .css: return ["css", "scss", "sass"]
+        case .javascript: return ["js", "jsx", "ts", "tsx", "mjs", "cjs"]
+        case .xml: return ["xml", "plist", "svg", "xhtml"]
+        }
+    }
+
+    /// Best guess for a file name or extension string.
+    static func language(forExtensionOrName value: String) -> CodeFormatterLanguage? {
+        let cleaned = value.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return nil }
+        if let exact = allCases.first(where: { $0.rawValue == cleaned }) {
+            return exact
+        }
+        return allCases.first { $0.aliases.contains(cleaned) }
+    }
+
+    /// Placeholder shown in the editor before anything is typed.
+    var editorPlaceholder: String {
+        switch self {
+        case .json:
+            return "{\n  \"name\": \"atoll\",\n  \"version\": \"2.3.3\"\n}"
+        case .yaml:
+            return "service:\n  image: nginx:latest\n  ports:\n    - \"80:80\""
+        case .sql:
+            return "select id, name from users where active = 1 order by created_at desc;"
+        case .html:
+            return "<div class=\"card\">\n  <h1>Atoll</h1>\n</div>"
+        case .css:
+            return ".card { display: flex; color: #fff; }"
+        case .javascript:
+            return "const greet = name => {\n  console.log(`hi ${name}`);\n};"
+        case .xml:
+            return "<note>\n  <to>team</to>\n  <body>hello</body>\n</note>"
+        }
+    }
 }
 
 enum NotesLayoutState: Equatable {

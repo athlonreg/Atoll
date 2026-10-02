@@ -66,6 +66,9 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
     case shortcuts
     case notes
     case terminal
+    case codeFormatter
+    case passwordGenerator
+    case notchEntries
     case about
 
     var id: String { rawValue }
@@ -78,8 +81,8 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .hudAndOSD, .battery:                                           return .system
         case .timer, .calendar, .notes:                                      return .productivity
         case .clipboard, .screenAssistant, .colorPicker, .shelf,
-             .downloads, .shortcuts:                                         return .utilities
-        case .stats, .terminal:                                              return .developer
+             .downloads, .shortcuts, .passwordGenerator, .notchEntries:       return .utilities
+        case .stats, .terminal, .codeFormatter:                              return .developer
         case .extensions:                                                    return .integrations
         case .about:                                                         return .info
         }
@@ -107,6 +110,9 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .shortcuts: return String(localized: "Shortcuts")
         case .notes: return String(localized: "Notes")
         case .terminal: return String(localized: "Terminal")
+        case .codeFormatter: return String(localized: "Code Formatter")
+        case .passwordGenerator: return String(localized: "Password Generator")
+        case .notchEntries: return String(localized: "Notch Entries")
         case .about: return String(localized: "About")
         }
     }
@@ -133,6 +139,9 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .shortcuts: return "keyboard"
         case .notes: return "note.text"
         case .terminal: return "apple.terminal"
+        case .codeFormatter: return "curlybraces"
+        case .passwordGenerator: return "key.fill"
+        case .notchEntries: return "rectangle.grid.1x2"
         case .about: return "info.circle"
         }
     }
@@ -159,6 +168,9 @@ private enum SettingsTab: String, CaseIterable, Identifiable {
         case .shortcuts: return .orange
         case .notes: return Color(red: 0.979, green: 0.716, blue: 0.153, opacity: 1.000)
         case .terminal: return Color(red: 0.2, green: 0.8, blue: 0.4)
+        case .codeFormatter: return Color(red: 0.36, green: 0.61, blue: 0.98)
+        case .passwordGenerator: return Color(red: 0.95, green: 0.72, blue: 0.22)
+        case .notchEntries: return Color(red: 0.45, green: 0.52, blue: 0.62)
         case .about: return .secondary
         }
     }
@@ -448,6 +460,7 @@ private enum SettingsSearchIndex {
         SettingsSearchEntry(tab: .stats, title: "GPU Usage", keywords: ["gpu", "graphics"], highlightID: SettingsTab.stats.highlightID(for: "GPU Usage")),
         SettingsSearchEntry(tab: .stats, title: "Network Activity", keywords: ["network", "graph"], highlightID: SettingsTab.stats.highlightID(for: "Network Activity")),
         SettingsSearchEntry(tab: .stats, title: "Disk I/O", keywords: ["disk", "io"], highlightID: SettingsTab.stats.highlightID(for: "Disk I/O")),
+        SettingsSearchEntry(tab: .stats, title: "Temperature on graphs", keywords: ["temperature", "graph", "celsius", "fahrenheit"], highlightID: SettingsTab.stats.highlightID(for: "Temperature on graphs")),
 
         // Clipboard
         SettingsSearchEntry(tab: .clipboard, title: "Enable Clipboard Manager", keywords: ["clipboard", "manager"], highlightID: SettingsTab.clipboard.highlightID(for: "Enable Clipboard Manager")),
@@ -481,6 +494,39 @@ private enum SettingsSearchIndex {
         SettingsSearchEntry(tab: .terminal, title: "Scrollback lines", keywords: ["terminal", "scrollback", "buffer", "history"], highlightID: SettingsTab.terminal.highlightID(for: "Scrollback lines")),
         SettingsSearchEntry(tab: .terminal, title: "Option as Meta", keywords: ["terminal", "option", "meta", "alt", "key"], highlightID: SettingsTab.terminal.highlightID(for: "Option as Meta")),
         SettingsSearchEntry(tab: .terminal, title: "Mouse reporting", keywords: ["terminal", "mouse", "reporting", "vim", "tmux"], highlightID: SettingsTab.terminal.highlightID(for: "Mouse reporting")),
+
+        // Code Formatter
+        SettingsSearchEntry(tab: .codeFormatter, title: "Enable code formatter", keywords: ["format", "beautify", "pretty print"], highlightID: SettingsTab.codeFormatter.highlightID(for: "Enable code formatter")),
+        SettingsSearchEntry(tab: .codeFormatter, title: "Language", keywords: ["json", "yaml", "sql", "html", "xml", "css", "javascript"], highlightID: SettingsTab.codeFormatter.highlightID(for: "Language")),
+        SettingsSearchEntry(tab: .codeFormatter, title: "Indent", keywords: ["indent", "tabs", "spaces", "width"], highlightID: SettingsTab.codeFormatter.highlightID(for: "Indent")),
+        SettingsSearchEntry(tab: .codeFormatter, title: "Format while typing", keywords: ["live", "auto", "format"], highlightID: SettingsTab.codeFormatter.highlightID(for: "Format while typing")),
+        SettingsSearchEntry(tab: .codeFormatter, title: "Uppercase SQL keywords", keywords: ["sql", "keywords", "case", "uppercase"], highlightID: SettingsTab.codeFormatter.highlightID(for: "Uppercase SQL keywords")),
+
+        // Password Generator
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Enable password generator", keywords: ["password", "secret", "generator"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Enable password generator")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Length", keywords: ["password", "length", "characters"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Length")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Lowercase", keywords: ["password", "lowercase", "a-z"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Lowercase")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Uppercase", keywords: ["password", "uppercase", "a-z"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Uppercase")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Digits", keywords: ["password", "numbers", "digits"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Digits")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Symbols", keywords: ["password", "symbols", "special characters"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Symbols")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Custom symbols", keywords: ["password", "symbols", "custom", "allowed"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Custom symbols")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Require every set", keywords: ["password", "rule", "require", "include"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Require every set")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Exclude look-alike characters", keywords: ["password", "ambiguous", "similar", "readable"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Exclude look-alike characters")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Avoid repeated characters", keywords: ["password", "repeat", "duplicate"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Avoid repeated characters")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Copy automatically", keywords: ["password", "clipboard", "copy"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Copy automatically")),
+        SettingsSearchEntry(tab: .passwordGenerator, title: "Preview", keywords: ["password", "sample", "preview", "entropy"], highlightID: SettingsTab.passwordGenerator.highlightID(for: "Preview")),
+
+        // Notch Entries
+        SettingsSearchEntry(tab: .notchEntries, title: "Home", keywords: ["entries", "tabs", "hide", "show", "visibility"], highlightID: SettingsTab.notchEntries.highlightID(for: "Home")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Shelf", keywords: ["entries", "tabs", "hide", "show"], highlightID: SettingsTab.notchEntries.highlightID(for: "Shelf")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Timer", keywords: ["entries", "tabs", "hide", "show"], highlightID: SettingsTab.notchEntries.highlightID(for: "Timer")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Stats", keywords: ["entries", "tabs", "hide", "show"], highlightID: SettingsTab.notchEntries.highlightID(for: "Stats")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Usage", keywords: ["entries", "tabs", "hide", "show", "llm"], highlightID: SettingsTab.notchEntries.highlightID(for: "Usage")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Notes", keywords: ["entries", "tabs", "hide", "show"], highlightID: SettingsTab.notchEntries.highlightID(for: "Notes")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Clipboard", keywords: ["entries", "tabs", "hide", "show"], highlightID: SettingsTab.notchEntries.highlightID(for: "Clipboard")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Terminal", keywords: ["entries", "tabs", "hide", "show"], highlightID: SettingsTab.notchEntries.highlightID(for: "Terminal")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Code Formatter", keywords: ["entries", "tabs", "hide", "show", "format"], highlightID: SettingsTab.notchEntries.highlightID(for: "Code Formatter")),
+        SettingsSearchEntry(tab: .notchEntries, title: "Password Generator", keywords: ["entries", "tabs", "hide", "show", "password"], highlightID: SettingsTab.notchEntries.highlightID(for: "Password Generator")),
     ]
 
     /// Which segment of the Lock Screen tab a search result lives on, or nil
@@ -817,9 +863,12 @@ struct SettingsView: View {
             .shelf,
             .downloads,
             .shortcuts,
+            .passwordGenerator,
+            .notchEntries,
             // Developer
             .stats,
             .terminal,
+            .codeFormatter,
             // Integrations
             .extensions,
             // Info
@@ -1012,7 +1061,8 @@ struct SettingsView: View {
 
     private func isTabVisible(_ tab: SettingsTab) -> Bool {
         switch tab {
-        case .timer, .stats, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal:
+        case .timer, .stats, .clipboard, .screenAssistant, .colorPicker, .shelf, .notes, .terminal,
+             .codeFormatter, .passwordGenerator, .notchEntries:
             return !enableMinimalisticUI
         default:
             return true
@@ -1101,6 +1151,18 @@ struct SettingsView: View {
         case .terminal:
             SettingsForm(tab: .terminal) {
                 TerminalSettings()
+            }
+        case .codeFormatter:
+            SettingsForm(tab: .codeFormatter) {
+                CodeFormatterSettings()
+            }
+        case .passwordGenerator:
+            SettingsForm(tab: .passwordGenerator) {
+                PasswordGeneratorSettings()
+            }
+        case .notchEntries:
+            SettingsForm(tab: .notchEntries) {
+                NotchEntriesSettings()
             }
         case .about:
             if let controller = updaterController {
@@ -8209,6 +8271,10 @@ struct StatsSettings: View {
                         Text("Disk I/O")
                     }
                     .settingsHighlight(id: highlightID("Disk I/O"))
+                    Defaults.Toggle(key: .showTemperatureOnStatsCards) {
+                        Text("Temperature on graphs")
+                    }
+                    .settingsHighlight(id: highlightID("Temperature on graphs"))
                 } header: {
                     Text("Graph Visibility")
                 } footer: {
@@ -9692,5 +9758,324 @@ private extension QuickShareProvider {
 
     var symbolFallbackName: String {
         id == "System Share Menu" ? "square.and.arrow.up.on.square" : "square.and.arrow.up"
+    }
+}
+
+// MARK: - Code Formatter Settings
+
+struct CodeFormatterSettings: View {
+    @Default(.enableCodeFormatter) private var enableCodeFormatter
+    @Default(.codeFormatterLanguage) private var language
+    @Default(.codeFormatterIndentWidth) private var indentWidth
+    @Default(.codeFormatterLiveFormat) private var liveFormat
+    @Default(.codeFormatterUppercaseSQLKeywords) private var uppercaseSQLKeywords
+
+    private func highlightID(_ title: String) -> String {
+        SettingsTab.codeFormatter.highlightID(for: title)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Defaults.Toggle(key: .enableCodeFormatter) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Enable code formatter")
+                        Text("Adds an entry beside Terminal that opens a split-view formatter.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .settingsHighlight(id: highlightID("Enable code formatter"))
+            } header: {
+                Text("General")
+            } footer: {
+                Text("Turn this off to remove the entry from the notch tab bar without losing the settings below.")
+            }
+
+            if enableCodeFormatter {
+                Section {
+                    HStack {
+                        Text("Language")
+                        Spacer()
+                        Picker("", selection: $language) {
+                            ForEach(CodeFormatterLanguage.allCases) { option in
+                                Text(option.localizedName).tag(option)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .frame(minWidth: 120)
+                    }
+                    .settingsHighlight(id: highlightID("Language"))
+
+                    HStack {
+                        Text("Indent")
+                        Spacer()
+                        Picker("", selection: $indentWidth) {
+                            Text("1 space").tag(1)
+                            Text("2 spaces").tag(2)
+                            Text("4 spaces").tag(4)
+                            Text("1 tab").tag(8)
+                        }
+                        .pickerStyle(.menu)
+                        .frame(minWidth: 120)
+                    }
+                    .settingsHighlight(id: highlightID("Indent"))
+
+                    Toggle("Format while typing", isOn: $liveFormat)
+                        .settingsHighlight(id: highlightID("Format while typing"))
+
+                    Toggle("Uppercase SQL keywords", isOn: $uppercaseSQLKeywords)
+                        .settingsHighlight(id: highlightID("Uppercase SQL keywords"))
+                } header: {
+                    Text("Formatting")
+                } footer: {
+                    Text("JSON, YAML, SQL, HTML, XML, CSS and JavaScript are supported. When a language cannot be parsed, the original text is kept and the reason is shown underneath the editor.")
+                }
+
+                Section {
+                    Button("Open Code Formatter") {
+                        CodeFormatterPanelManager.shared.showPanel()
+                    }
+                } header: {
+                    Text("Actions")
+                } footer: {
+                    Text("Opens the same panel the notch entry opens.")
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Code Formatter")
+    }
+}
+
+// MARK: - Password Generator Settings
+
+struct PasswordGeneratorSettings: View {
+    @ObservedObject private var generator = PasswordGenerator.shared
+    @Default(.enablePasswordGenerator) private var enablePasswordGenerator
+    @Default(.passwordLength) private var passwordLength
+    @Default(.passwordIncludeLowercase) private var includeLowercase
+    @Default(.passwordIncludeUppercase) private var includeUppercase
+    @Default(.passwordIncludeDigits) private var includeDigits
+    @Default(.passwordIncludeSymbols) private var includeSymbols
+    @Default(.passwordCustomSymbols) private var customSymbols
+    @Default(.passwordExcludeAmbiguous) private var excludeAmbiguous
+    @Default(.passwordRequireEverySet) private var requireEverySet
+    @Default(.passwordAvoidRepeats) private var avoidRepeats
+    @Default(.passwordAutoCopyOnGenerate) private var autoCopy
+
+    @State private var preview: String = ""
+
+    private func highlightID(_ title: String) -> String {
+        SettingsTab.passwordGenerator.highlightID(for: title)
+    }
+
+    private var effectiveSymbols: String {
+        PasswordGenerator.shared.resolvedSymbolPreview(from: customSymbols, excludeAmbiguous: excludeAmbiguous)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                Defaults.Toggle(key: .enablePasswordGenerator) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Enable password generator")
+                        Text("Adds an entry to the notch that generates a password using your rules.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .settingsHighlight(id: highlightID("Enable password generator"))
+            } header: {
+                Text("General")
+            } footer: {
+                Text("Randomness comes from the system's cryptographic random source, not a seeded generator.")
+            }
+
+            if enablePasswordGenerator {
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Length")
+                            Spacer()
+                            Text("\(Int(passwordLength)) characters")
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                        Slider(value: $passwordLength, in: 4...64, step: 1)
+                    }
+                    .settingsHighlight(id: highlightID("Length"))
+                } header: {
+                    Text("Length")
+                } footer: {
+                    Text("Between 4 and 64 characters. Longer passwords need proportionally more characters before they add real strength.")
+                }
+
+                Section {
+                    Toggle("Lowercase (a–z)", isOn: $includeLowercase)
+                        .settingsHighlight(id: highlightID("Lowercase"))
+                    Toggle("Uppercase (A–Z)", isOn: $includeUppercase)
+                        .settingsHighlight(id: highlightID("Uppercase"))
+                    Toggle("Digits (0–9)", isOn: $includeDigits)
+                        .settingsHighlight(id: highlightID("Digits"))
+                    Toggle("Symbols", isOn: $includeSymbols)
+                        .settingsHighlight(id: highlightID("Symbols"))
+
+                    if includeSymbols {
+                        VStack(alignment: .leading, spacing: 6) {
+                            TextField("!@#$%^&*", text: $customSymbols)
+                                .textFieldStyle(.roundedBorder)
+                            HStack {
+                                Text("\(effectiveSymbols.count) usable symbols")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Button("Reset") { customSymbols = "!@#$%^&*()-_=+[]{};:,.?/" }
+                                    .font(.caption)
+                            }
+                        }
+                        .settingsHighlight(id: highlightID("Custom symbols"))
+                    }
+                } header: {
+                    Text("Character sets")
+                } footer: {
+                    Text("Every enabled set contributes characters to the pool. With “Require every set” on, the password contains at least one of each.")
+                }
+
+                Section {
+                    Toggle("Require every selected set", isOn: $requireEverySet)
+                        .settingsHighlight(id: highlightID("Require every set"))
+                        .disabled(enabledSetCount < 2)
+                    Toggle("Exclude look-alike characters (Il1O0)", isOn: $excludeAmbiguous)
+                        .settingsHighlight(id: highlightID("Exclude look-alike characters"))
+                    Toggle("Avoid repeated characters", isOn: $avoidRepeats)
+                        .settingsHighlight(id: highlightID("Avoid repeated characters"))
+                    Toggle("Copy automatically after generating", isOn: $autoCopy)
+                        .settingsHighlight(id: highlightID("Copy automatically"))
+                } header: {
+                    Text("Rules")
+                } footer: {
+                    Text("Requiring every set needs a length at least equal to the number of enabled sets.")
+                }
+
+                Section {
+                    HStack(spacing: 10) {
+                        Text(preview.isEmpty ? String(localized: "No preview") : preview)
+                            .font(.system(size: 12, design: .monospaced))
+                            .lineLimit(2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
+
+                        Button {
+                            preview = generator.generate()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                        .disabled(validationMessage != nil)
+                    }
+                    .settingsHighlight(id: highlightID("Preview"))
+
+                    if let validationMessage {
+                        Text(validationMessage)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                } header: {
+                    Text("Preview")
+                } footer: {
+                    Text("Generates using the same rules the notch entry uses. When automatic copy is on, this also replaces the clipboard.")
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Password Generator")
+        .onAppear {
+            if preview.isEmpty, validationMessage == nil {
+                preview = generator.generate()
+            }
+        }
+    }
+
+    private var enabledSetCount: Int {
+        [includeLowercase, includeUppercase, includeDigits, includeSymbols].filter { $0 }.count
+    }
+
+    private var validationMessage: String? {
+        generator.validationMessage(for: generator.currentRules)
+    }
+}
+
+// MARK: - Notch Entries Settings
+
+struct NotchEntriesSettings: View {
+    /// Mirrors the stored visibility map so toggles animate immediately.
+    @State private var revision = 0
+
+    private func highlightID(_ title: String) -> String {
+        SettingsTab.notchEntries.highlightID(for: title)
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                ForEach(NotchEntry.displayOrder) { entry in
+                    entryRow(for: entry)
+                }
+            } header: {
+                Text("Visible entries")
+            } footer: {
+                Text("Hide entries you never use. A hidden entry disappears from the notch tab bar immediately; its own settings stay untouched so you can bring it back later.")
+            }
+
+            Section {
+                HStack {
+                    Text("Hidden entries")
+                    Spacer()
+                    Text("\(NotchEntry.displayOrder.filter { $0.isHidden }.count)")
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+
+                Button("Show all entries") {
+                    NotchEntry.resetAllVisibility()
+                    revision += 1
+                }
+                .disabled(!NotchEntry.hasCustomizations)
+            } header: {
+                Text("Overview")
+            } footer: {
+                Text("Each feature also has its own enable switch (for example Timer or Terminal); that switch must be on for the entry to appear, whatever is set here.")
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Notch Entries")
+    }
+
+    @ViewBuilder
+    private func entryRow(for entry: NotchEntry) -> some View {
+        let binding = Binding<Bool>(
+            get: { !NotchEntry.isHidden(entry) },
+            set: { isVisible in
+                NotchEntry.setHidden(!isVisible, for: entry)
+                revision += 1
+            }
+        )
+
+        Toggle(isOn: binding) {
+            HStack(spacing: 10) {
+                Image(systemName: entry.systemImage)
+                    .font(.system(size: 13, weight: .medium))
+                    .frame(width: 20, alignment: .center)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(entry.localizedName)
+                    Text(entry.localizedDescription)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .toggleStyle(.switch)
+        .settingsHighlight(id: highlightID(entry.localizedName))
     }
 }

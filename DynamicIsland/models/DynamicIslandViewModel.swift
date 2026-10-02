@@ -49,6 +49,8 @@ class DynamicIslandViewModel: NSObject, ObservableObject {
     @Published var isColorPickerPopoverActive: Bool = false
     @Published var isStatsPopoverActive: Bool = false
     @Published var isReminderPopoverActive: Bool = false
+    /// Whether the password generator popover (own notch entry) is open.
+    @Published var isPasswordGeneratorPopoverActive: Bool = false
     /// Whether any output picker popover is open.
     ///
     /// Four separate views can present one of these -- the media output and

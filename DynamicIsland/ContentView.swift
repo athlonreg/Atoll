@@ -2467,7 +2467,8 @@ struct ContentView: View {
          vm.isPerAppVolumePopoverActive ||
          vm.isCaffeinatePopoverActive ||
          vm.isMediaOutputPopoverActive ||
-         vm.isReminderPopoverActive
+         vm.isReminderPopoverActive ||
+         vm.isPasswordGeneratorPopoverActive
     }
 
     private func shouldPreventAutoClose() -> Bool {

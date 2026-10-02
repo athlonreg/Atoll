@@ -26,6 +26,8 @@ protocol GraphData {
     var icon: String { get }
     var type: GraphType { get }
     var rankingType: ProcessRankingType? { get }
+    /// Rendered in the card's top-right corner. `nil` hides the reading.
+    var temperatureText: String? { get }
 }
 
 enum GraphType {
@@ -42,6 +44,7 @@ struct SingleGraphData: GraphData {
     let icon: String
     let type: GraphType = .single
     let rankingType: ProcessRankingType?
+    let temperatureText: String?
 }
 
 // Dual value graph data (for network/disk)
@@ -57,6 +60,7 @@ struct DualGraphData: GraphData {
     let icon: String
     let type: GraphType = .dual
     let rankingType: ProcessRankingType?
+    let temperatureText: String?
 }
 
 struct NotchStatsView: View {
@@ -67,6 +71,8 @@ struct NotchStatsView: View {
     @Default(.showGpuGraph) var showGpuGraph
     @Default(.showNetworkGraph) var showNetworkGraph
     @Default(.showDiskGraph) var showDiskGraph
+    @Default(.showTemperatureOnStatsCards) var showTemperatureOnStatsCards
+    @Default(.cpuTemperatureUnit) var temperatureUnit
     @State private var showingCPUPopover = false
     @State private var showingMemoryPopover = false
     @State private var showingGPUPopover = false
@@ -82,6 +88,9 @@ struct NotchStatsView: View {
 
     var availableGraphs: [GraphData] {
         var graphs: [GraphData] = []
+        // Only the CPU and the GPUs expose a sensor. Everything else falls back to
+        // the SoC reading so every card keeps a temperature in the corner.
+        let fallbackTemperature = showTemperatureOnStatsCards ? socTemperatureText : nil
 
         if showCpuGraph {
             graphs.append(SingleGraphData(
@@ -90,7 +99,8 @@ struct NotchStatsView: View {
                 data: statsManager.cpuHistory,
                 color: .blue,
                 icon: "cpu",
-                rankingType: .cpu
+                rankingType: .cpu,
+                temperatureText: fallbackTemperature
             ))
         }
 
@@ -101,7 +111,8 @@ struct NotchStatsView: View {
                 data: statsManager.memoryHistory,
                 color: .green,
                 icon: "memorychip",
-                rankingType: .memory
+                rankingType: .memory,
+                temperatureText: fallbackTemperature
             ))
         }
 
@@ -112,7 +123,8 @@ struct NotchStatsView: View {
                 data: statsManager.gpuHistory,
                 color: .purple,
                 icon: "display",
-                rankingType: .gpu
+                rankingType: .gpu,
+                temperatureText: showTemperatureOnStatsCards ? (gpuTemperatureText ?? fallbackTemperature) : nil
             ))
         }
 
@@ -127,7 +139,8 @@ struct NotchStatsView: View {
                 negativeColor: .red,
                 color: .orange,
                 icon: "network",
-                rankingType: .network
+                rankingType: .network,
+                temperatureText: fallbackTemperature
             ))
         }
 
@@ -142,11 +155,29 @@ struct NotchStatsView: View {
                 negativeColor: .yellow,
                 color: .cyan,
                 icon: "internaldrive",
-                rankingType: .disk
+                rankingType: .disk,
+                temperatureText: fallbackTemperature
             ))
         }
 
         return graphs
+    }
+
+    /// CPU package temperature, already converted to the unit chosen in settings.
+    private var socTemperatureText: String? {
+        guard let celsius = statsManager.cpuTemperature.celsius else { return nil }
+        return formattedTemperature(celsius)
+    }
+
+    /// Hottest GPU that reports a sensor; `nil` when no GPU publishes one.
+    private var gpuTemperatureText: String? {
+        guard let hottest = statsManager.gpuDevices.compactMap(\.temperature).max() else { return nil }
+        return formattedTemperature(hottest)
+    }
+
+    private func formattedTemperature(_ celsius: Double) -> String {
+        let value = temperatureUnit == .celsius ? celsius : celsius * 9.0 / 5.0 + 32.0
+        return String(format: "%.0f%@", value, temperatureUnit.symbol)
     }
 
     // Smart grid layout system for different graph counts
@@ -439,7 +470,16 @@ struct UnifiedStatsCard: View {
                     .fontWeight(.medium)
                     .foregroundStyle(Color.white.opacity(0.8))
                 
-                Spacer()
+                Spacer(minLength: 2)
+                
+                if let temperatureText = graphData.temperatureText {
+                    Text(temperatureText)
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .monospacedDigit()
+                        .foregroundStyle(Color.white.opacity(0.7))
+                        .fixedSize()
+                }
             }
             
             // Values section - same height for every card so the grid boxes match
